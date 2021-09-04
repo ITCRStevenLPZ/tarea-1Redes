@@ -1,3 +1,4 @@
+from email.header import Header
 from twisted.mail import smtp, maildir
 from zope.interface import implementer
 from twisted.python.usage import Options, UsageError
@@ -16,7 +17,7 @@ class MaildirMessageWriter(object):
 
     def __init__(self, userDir):
         if not os.path.exists(userDir): os.mkdir(userDir)
-        inboxDir = os.path.join(userDir, 'Inbox')
+        inboxDir = os.path.join(userDir, 'INBOX')
         self.mailbox = maildir.MaildirMailbox(inboxDir)
         self.lines = []
 
@@ -26,14 +27,14 @@ class MaildirMessageWriter(object):
         if isinstance(line, str):
             self.lines.append(line)
         else:
-            self.lines.append(line.decode('utf8', 'strict'))
+            self.lines.append(line.decode('utf8'))
         
 
     def eomReceived(self):
         # message is complete, store it
         print ("Message data complete.")
         self.lines.append('') # add a trailing newline
-        messageData = ''.join(self.lines)
+        messageData = '\n'.join(self.lines)
         messageData = str.encode(messageData)
         type(messageData)
         return self.mailbox.appendMessage(messageData)
@@ -71,11 +72,11 @@ class LocalDelivery(object):
 
         myHostname, clientIP = helo
 
-        headerValue = "by %s from %s with ESMTP ; %s" % (myHostname, clientIP, smtp.rfc822date( ))
+        headerValue = "by %s from %s with ESMTP ; %s" % (myHostname.decode(), clientIP.decode(), smtp.rfc822date().decode())
 
         # email.Header.Header used for automatic wrapping of long lines
 
-        return ("Received: %s" % headerValue)
+        return ("Received: %s" % Header(headerValue))
 
 
 
@@ -87,9 +88,7 @@ class LocalDelivery(object):
 
         print ("Accepting mail for %s..." % user.dest)
 
-        return lambda: MaildirMessageWriter(
-
-        self._getAddressDir(str(user.dest)))
+        return lambda: MaildirMessageWriter(self._getAddressDir(user.dest))
 
 
 
@@ -163,16 +162,18 @@ class SMTPServer(protocol.ServerFactory):
 
     def buildProtocol(self, addr):
 
-         delivery = LocalDelivery(self.baseDir, self.validDomains)
+        delivery = LocalDelivery(self.baseDir, self.validDomains)
 
-         smtpProtocol = smtp.SMTP(delivery)
+        proto = smtp.ESMTP()
+
+        proto.delivery = delivery
 
          #esmtpProtocol = smtp.ESMTP(contextFactory = self.contextFactory)
 
          #esmtpProtocol.SMTP = smtpProtocol
 
 
-         return smtpProtocol
+        return proto
 
 def main(args=None):
 

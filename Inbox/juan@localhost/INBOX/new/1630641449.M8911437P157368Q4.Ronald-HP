@@ -1,0 +1,10 @@
+Received: by Ronald-HP from 127.0.0.1 with ESMTP ; Thu, 02 Sep 2021 21:57:29 -0600
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Subject: Hi there, this is the test mail subject!
+From: test@example.com
+To: juan@localhost
+
+Hope you're fine!, this is the test mail body
+Bye!

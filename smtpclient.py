@@ -17,7 +17,7 @@ def send(message, subject, sender, recipients, host, port):
     msg["To"] = ", ".join(recipients)
     print(msg)
 
-    dfr = sendmail(host.encode('utf-8'), sender.encode('utf-8'), recipients, msg.as_string().encode('utf-8'),port=int(port),requireTransportSecurity=False)
+    dfr = sendmail(host, sender, recipients, msg,port=int(port))
 
     def success(r):
         reactor.stop()
@@ -104,12 +104,12 @@ def main(args=None):
 
     addresses = []
 
-    
     with open(o["csv"], 'r') as csvfile:
         spamreader = csv.reader(csvfile, delimiter='\n', quotechar='|')
         for row in spamreader:
             new = row[0].split(sep=',')
             addresses.append(new)
+
 
     subject = str(msgList[0][0])
 
@@ -119,7 +119,6 @@ def main(args=None):
     port = int(o["serverhost"].split(sep=":")[1])
     sender = "test@example.com"
     recipients = GetRecipients(addresses)
-
     log.startLogging(sys.stdout)
     send(msg, subject, sender, recipients, host, port)
 
